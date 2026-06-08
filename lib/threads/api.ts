@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getServerEnv } from "@/lib/env";
+import { threadsOAuthLog } from "@/lib/threads/logging";
 
 const profileResponseSchema = z
   .object({
@@ -7,7 +8,7 @@ const profileResponseSchema = z
     username: z.string().nullable().optional(),
     name: z.string().nullable().optional(),
     display_name: z.string().nullable().optional(),
-    profile_picture_url: z.string().nullable().optional(),
+    threads_profile_picture_url: z.string().nullable().optional(),
   })
   .passthrough();
 
@@ -22,7 +23,7 @@ export async function getThreadsProfile(accessToken: string): Promise<ThreadsPro
   const env = getServerEnv();
   const baseUrl = env.THREADS_API_BASE_URL.replace(/\/$/, "");
   const url = new URL(`${baseUrl}/me`);
-  url.searchParams.set("fields", "id,username,name,profile_picture_url");
+  url.searchParams.set("fields", "id,username,name,threads_profile_picture_url");
   url.searchParams.set("access_token", accessToken);
 
   const response = await fetch(url, {
@@ -32,6 +33,10 @@ export async function getThreadsProfile(accessToken: string): Promise<ThreadsPro
 
   if (!response.ok) {
     const errorText = await response.text();
+    threadsOAuthLog("error", "profile_provider_error", "helper", {
+      status: response.status,
+      response: errorText,
+    });
     throw new Error(`Threads profile fetch failed: ${response.status} ${errorText}`);
   }
 
@@ -42,7 +47,6 @@ export async function getThreadsProfile(accessToken: string): Promise<ThreadsPro
     username: profile.username ?? null,
     // TODO: Confirm the official field name available to the approved Threads app permissions.
     display_name: profile.display_name ?? profile.name ?? null,
-    // TODO: Confirm profile picture availability for the app's granted Threads scopes.
-    profile_picture_url: profile.profile_picture_url ?? null,
+    profile_picture_url: profile.threads_profile_picture_url ?? null,
   };
 }

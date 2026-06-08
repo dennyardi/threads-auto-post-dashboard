@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { getServerEnv } from "@/lib/env";
+import { threadsOAuthLog } from "@/lib/threads/logging";
 
 const tokenResponseSchema = z.object({
   access_token: z.string(),
   token_type: z.string().optional(),
-  expires_in: z.number().optional(),
+  expires_in: z.coerce.number().optional(),
   scope: z.string().optional(),
 });
 
@@ -48,6 +49,10 @@ export async function exchangeCodeForToken(code: string): Promise<ThreadsTokenRe
 
   if (!response.ok) {
     const errorText = await response.text();
+    threadsOAuthLog("error", "token_exchange_provider_error", "helper", {
+      status: response.status,
+      response: errorText,
+    });
     throw new Error(`Threads token exchange failed: ${response.status} ${errorText}`);
   }
 
