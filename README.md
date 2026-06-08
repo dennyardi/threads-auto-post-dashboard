@@ -103,6 +103,31 @@ If port 3000 is already used:
 npm run dev -- --port 3001
 ```
 
+## OLSPanel Deployment
+
+After creating the MariaDB database and importing `database/mysql/schema.sql`, configure the Node.js app in OLSPanel with:
+
+```text
+App root: project folder
+Startup file: server.js
+Port: 3000
+Environment: production
+```
+
+On the server, run:
+
+```bash
+npm install
+npx prisma generate
+npm run build
+```
+
+Then start the app from OLSPanel. If you run it manually:
+
+```bash
+NODE_ENV=production node server.js
+```
+
 ## Auth Flow
 
 1. User registers with app email/password.
